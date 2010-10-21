@@ -38,6 +38,9 @@ import hashlib
 import time
 import urllib
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Find a JSON parser
 try:
     import json
@@ -170,13 +173,19 @@ class GraphAPI(object):
         post_data = None if post_args is None else urllib.urlencode(post_args)
         file = urllib.urlopen("https://graph.facebook.com/" + path + "?" +
                               urllib.urlencode(args), post_data)
+        
+        raw = file.read()
+        logger.debug('facebook response raw: %s' % raw)
         try:
-            response = _parse_json(file.read())
+            response = _parse_json(raw)
         finally:
             file.close()
-        if response.get("error"):
-            raise GraphAPIError(response["error"]["type"],
-                                response["error"]["message"])
+            
+        """ in some cases, response is not an object """
+        if response:
+            if response.get("error"):
+                raise GraphAPIError(response["error"]["type"],
+                                    response["error"]["message"])
         return response
 
 
