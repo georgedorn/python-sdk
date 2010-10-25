@@ -276,3 +276,42 @@ def get_user_from_cookie(cookies, app_id, app_secret):
         return args
     else:
         return None
+    
+    
+class RESTAPI(object):
+    """
+    Interface to the old REST API.
+    """
+
+    def __init__(self, access_token):
+        self.access_token = access_token
+        self.base_url = 'https://api.facebook.com/method/%s?format=json&access_token=%s&%s'
+
+    def request(self, method, **kwargs):
+        """ Performs the given query on Facebook or raises an `FQLAPIError` """
+        
+        params = urllib.urlencode(query=kwargs)
+        url = self.base_url % (urllib.quote_plus(method), urllib.quote_plus(self.access_token),
+             urllib.quote_plus(params))
+        
+        file = urllib.urlopen(url)
+
+        data = file.read()
+
+        try:
+            response = _parse_json(data)
+        except:
+            logging.error("Problem decoding response: %s" % data)
+        finally:
+            file.close()        
+        
+        if isinstance(response, dict) and response.get('error') and not response.get('errorIsWarning', False):
+            raise FQLAPIError(response['error'], response['errorSummary'])
+
+        return response
+
+class RESTAPIError(Exception):
+    def __init__(self, type, message):
+        Exception.__init__(self, message)
+        self.type = type
+    
