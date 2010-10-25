@@ -38,6 +38,9 @@ import hashlib
 import time
 import urllib
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Find a JSON parser
 try:
     import simplejson as json
@@ -167,6 +170,7 @@ class GraphAPI(object):
         post_data = None if post_args is None else urllib.urlencode(post_args)
         file = urllib.urlopen("https://graph.facebook.com/" + path + "?" + 
                               urllib.urlencode(args), post_data)
+        
         try:
             data = file.read()
         finally:
